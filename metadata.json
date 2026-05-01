@@ -1,0 +1,16 @@
+{
+  "name": "LENORY",
+  "description": "Premium AI-Powered Ed Tech and Business Platform with voice-first interface, 8D dashboard, and multi-modal AI tutors.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ],
+  "majorCapabilities": [
+    "AI-powered tutoring",
+    "Personalized study planning",
+    "CBT Exam simulation",
+    "Multi-modal AI chat",
+    "Admin dashboard",
+    "Gamification"
+  ]
+}
