@@ -199,7 +199,7 @@ export default function LiveSession() {
       streamRef.current = stream;
 
       const sessionPromise = ai.live.connect({
-        model: "models/gemini-2.4-flash-live-preview",
+        model: "models/gemini-2.0-flash-exp",
         callbacks: {
           onopen: () => {
              setStatus("Lenory is Live");

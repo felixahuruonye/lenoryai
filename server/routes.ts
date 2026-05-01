@@ -141,6 +141,16 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/generate-image", async (req, res) => {
+    try {
+      const { userId, prompt } = req.body;
+      const url = await MediaSystem.generateImage(userId, prompt);
+      res.json({ url });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   app.get("/api/stt/token", async (_req, res) => {
     try {
       const token = await MediaSystem.getRealtimeToken();

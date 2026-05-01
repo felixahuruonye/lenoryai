@@ -26,14 +26,17 @@ export class AIService {
     try {
       const customInstructions = await this.getSystemInstructions(userId);
       const isComplex = prompt.toLowerCase().includes("plan") || prompt.toLowerCase().includes("exam") || !!attachment;
-      const modelName = isComplex ? "gemini-3.1-pro-preview" : "gemini-3-flash-preview";
+      const modelName = isComplex ? "gemini-1.5-pro" : "gemini-1.5-flash";
 
-      const contents: any = [
-        { text: prompt }
-      ];
+      const model = this.ai.getGenerativeModel({
+        model: modelName,
+        systemInstruction: (customInstructions || "") + "\n\nYou are Lenory, a premium Nigerian AI tutor. Your English is clear and professional. Never repeat yourself. Always finish by asking how else you can specifically help based on the context."
+      });
+
+      const contents: any[] = [{ role: 'user', parts: [{ text: prompt }] }];
 
       if (attachment) {
-        contents.push({
+        contents[0].parts.push({
           inlineData: {
             data: attachment.data,
             mimeType: attachment.mimeType
@@ -41,16 +44,14 @@ export class AIService {
         });
       }
 
-      const response = await this.ai.models.generateContent({
-        model: modelName,
+      const result = await model.generateContent({
         contents,
-        config: {
-          systemInstruction: customInstructions || "You are Lenory, a helpful Nigerian AI tutor.",
+        generationConfig: {
           responseMimeType: isJson ? "application/json" : undefined
         }
       });
 
-      const text = response.text || "";
+      const text = result.response.text() || "";
       
       // Fire and forget logging
       void supabase.from('api_usage').insert({
@@ -75,19 +76,18 @@ export class AIService {
     try {
       const customInstructions = await this.getSystemInstructions(userId);
       const isComplex = prompt.toLowerCase().includes("coding") || prompt.toLowerCase().includes("complex");
-      const modelName = isComplex ? "gemini-3.1-pro-preview" : "gemini-3-flash-preview";
+      const modelName = isComplex ? "gemini-1.5-pro" : "gemini-1.5-flash";
 
-      const responseStream = await this.ai.models.generateContentStream({
+      const model = this.ai.getGenerativeModel({
         model: modelName,
-        contents: prompt,
-        config: {
-          systemInstruction: customInstructions || "You are Lenory, a helpful Nigerian AI tutor. Keep responses conversational and accurate."
-        }
+        systemInstruction: (customInstructions || "") + "\n\nYou are Lenory, a premium Nigerian AI tutor. Keep responses conversational and accurate. Don't repeat yourself."
       });
 
+      const result = await model.generateContentStream(prompt);
+
       let fullText = "";
-      for await (const chunk of responseStream) {
-        const chunkText = chunk.text || "";
+      for await (const chunk of result.stream) {
+        const chunkText = chunk.text();
         fullText += chunkText;
         onChunk(chunkText);
       }
@@ -108,31 +108,34 @@ export class AIService {
 
   static async generateImage(userId: string, prompt: string): Promise<string> {
     try {
-      const response = await this.ai.models.generateContent({
-        model: "gemini-2.5-flash-image",
-        contents: prompt,
+      const response = await fetch("/api/generate-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, prompt })
       });
-
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          return `data:image/png;base64,${part.inlineData.data}`;
-        }
-      }
-      throw new Error("No image data returned from model. Note: Image generation may be restricted for certain prompts.");
+      if (!response.ok) throw new Error("Image synthesis failed.");
+      const { url } = await response.json();
+      return url;
     } catch (error: any) {
       console.error("Image Gen Error:", error);
+      toast.error("Image synthesis failed. Check your credits.");
       throw error;
     }
   }
 
   static async generateVideo(userId: string, prompt: string): Promise<any> {
     try {
-      // Note: Video generation is usually separate or via specific models
-      // In @google/genai, this pattern might vary. Using general generation pattern for metadata if needed.
-      toast.info("Synthesizing temporal visual state...");
-      return { status: "processing", message: "Video synthesis started." };
+      const response = await fetch("/api/generate-video", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId, prompt })
+      });
+      if (!response.ok) throw new Error("Video synthesis failed.");
+      toast.success("Video generation started! I'll update you in a few minutes.");
+      return await response.json();
     } catch (error: any) {
       console.error("Video Gen Error:", error);
+      toast.error("Video synthesis failed.");
       throw error;
     }
   }

@@ -23,6 +23,28 @@ export class MediaSystem {
     return prediction;
   }
 
+  static async generateImage(userId: string, prompt: string) {
+    // 5 credits per image
+    await CreditSystem.checkCredits(userId, 5);
+
+    const output = await replicate.run(
+      "bytedance/sdxl-lightning-4step:727e4943fcfcae266107386c90d56ee255e378d3807db1fd90cbd7d4513693f9",
+      {
+        input: {
+          prompt: prompt,
+          width: 768,
+          height: 768,
+          num_outputs: 1,
+          scheduler: "K_EULER",
+          guidance_scale: 0
+        }
+      }
+    );
+
+    await CreditSystem.deductCredits(userId, 5);
+    return (output as string[])[0];
+  }
+
   static async transcribeAudio(audioUrl: string) {
     const transcript = await aai.transcripts.transcribe({
       audio: audioUrl,

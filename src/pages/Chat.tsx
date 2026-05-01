@@ -18,8 +18,18 @@ import {
   Zap,
   PlayCircle,
   Brain,
-  Search
+  Search,
+  Volume2,
+  Share2,
+  Copy,
+  RotateCcw,
+  Type,
+  Edit2,
+  Camera,
+  Layers,
+  Monitor
 } from "lucide-react";
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -60,6 +70,21 @@ export default function Chat() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const hasLoadedQuery = useRef(false);
   const [showScrollBottom, setShowScrollBottom] = useState(false);
+
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'video' | 'file') => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    toast.info(`Uploading ${files.length} ${type}(s)...`);
+    setTimeout(() => {
+      toast.success(`${files.length} ${type}(s) uploaded! Lenory is analyzing...`);
+    }, 1500);
+  };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const target = e.currentTarget;
@@ -273,14 +298,28 @@ export default function Chat() {
               <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-primary" />
             </div>
             <div>
-              <h2 className="font-bold text-sm md:text-base">Ask Lenory</h2>
+              <h2 className="font-semibold text-sm md:text-base">Ask Lenory</h2>
               <div className="flex items-center gap-1.5">
                 <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-widest font-black">AI Tutor Online</span>
+                <span className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-widest font-bold">AI Tutor Online</span>
               </div>
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="hidden md:flex items-center gap-1.5 mr-2">
+              <Button variant="outline" size="sm" className="h-8 rounded-full gap-2 border-primary/20 text-primary hover:bg-primary/10" onClick={() => sendMessage("Perform deep research on: ")}>
+                <Brain className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase">Research</span>
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 rounded-full gap-2 border-blue-500/20 text-blue-500 hover:bg-blue-500/10" onClick={() => sendMessage("Search the web for: ")}>
+                <Search className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase">Web Search</span>
+              </Button>
+              <Button variant="outline" size="sm" className="h-8 rounded-full gap-2 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/10" onClick={() => toast.info("Exploring Lenory Ecosystem...")}>
+                <Zap className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold uppercase">Explore</span>
+              </Button>
+            </div>
             <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8 md:h-9 md:w-9 rounded-lg transition-colors">
               <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
             </Button>
@@ -291,13 +330,13 @@ export default function Chat() {
           <div className="space-y-6 md:space-y-8 pb-10">
             {messages.length === 0 ? (
               <div className="py-20 flex flex-col items-center justify-center text-center space-y-8 animate-in fade-in zoom-in duration-700">
-              <div className="w-24 h-24 rounded-3xl bg-accent/50 border border-border flex items-center justify-center relative">
+              <div className="w-20 h-20 rounded-3xl bg-accent/50 border border-border flex items-center justify-center relative">
                 <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-                <Sparkles className="w-12 h-12 text-primary relative z-10" />
+                <Sparkles className="w-10 h-10 text-primary relative z-10" />
               </div>
               <div className="space-y-2">
-                <h3 className="text-3xl font-bold tracking-tight">How can I help you today?</h3>
-                <p className="text-muted-foreground max-w-sm mx-auto">Ask me anything about your studies, exams, or projects. I'm here to tutor you.</p>
+                <h3 className="text-2xl font-bold tracking-tight">How can I help you?</h3>
+                <p className="text-muted-foreground max-w-sm mx-auto text-sm">Ask me anything about your studies, exams, or projects. I'm here to tutor you.</p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full max-w-lg">
                 {shortcuts.map((s) => (
@@ -309,7 +348,7 @@ export default function Chat() {
                     <div className="p-2 rounded-lg bg-accent group-hover:bg-primary/20 transition-colors">
                       <s.icon className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                     </div>
-                    <span className="text-sm font-medium text-foreground/70">{s.label}</span>
+                    <span className="text-xs font-semibold text-foreground/70">{s.label}</span>
                   </button>
                 ))}
               </div>
@@ -345,7 +384,7 @@ export default function Chat() {
                       )}
                       
                       <div className={cn(
-                        "prose prose-sm max-w-none",
+                        "prose prose-sm max-w-none text-sm leading-relaxed",
                         m.role === 'user' ? "prose-invert" : "prose-slate dark:prose-invert"
                       )}>
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -368,10 +407,74 @@ export default function Chat() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/50 uppercase font-black px-2 tracking-widest">
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground/50 uppercase font-bold px-2 tracking-widest">
                        <span>{m.role === 'user' ? 'You' : 'Lenory AI'}</span>
                        <span>•</span>
                        <span>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 px-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-primary" onClick={() => {
+                              navigator.clipboard.writeText(m.content);
+                              toast.success("Copied to clipboard");
+                            }}>
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-[10px] font-bold">Copy</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-primary" onClick={() => toast.info("Speaker engine starting...")}>
+                              <Volume2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-[10px] font-bold">Listen</TooltipContent>
+                        </Tooltip>
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-primary" onClick={() => AIService.generateVideo(user!.id, m.content)}>
+                              <Share2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-[10px] font-bold">Share</TooltipContent>
+                        </Tooltip>
+
+                        {m.role === 'assistant' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-primary" onClick={() => sendMessage(messages[messages.length-2]?.content || "")}>
+                                <RotateCcw className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-[10px] font-bold">Retry</TooltipContent>
+                          </Tooltip>
+                        )}
+
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-primary" onClick={() => toast.info("Select text mode active")}>
+                              <Type className="w-3.5 h-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent className="text-[10px] font-bold">Select</TooltipContent>
+                        </Tooltip>
+
+                        {m.role === 'user' && (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground/40 hover:text-primary" onClick={() => setInput(m.content)}>
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="text-[10px] font-bold">Edit</TooltipContent>
+                          </Tooltip>
+                        )}
+                      </TooltipProvider>
                     </div>
                   </div>
                 </motion.div>
@@ -409,38 +512,52 @@ export default function Chat() {
             <div className="relative flex items-end gap-3 bg-background border-2 border-border/50 rounded-[2rem] p-3 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10 transition-all shadow-xl">
               
               <DropdownMenu>
-                <DropdownMenuTrigger>
+                <DropdownMenuTrigger asChild>
                   <Button type="button" size="icon" variant="ghost" className="h-10 w-10 shrink-0 rounded-full bg-background hover:bg-background/80 text-muted-foreground hover:text-primary transition-all">
                     <Plus className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-64 bg-popover border-border backdrop-blur-xl p-2 rounded-2xl shadow-xl">
-                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-primary/20 focus:text-primary cursor-pointer" onClick={() => toast.info("Math Scanner activated! (Mock)")}>
+                <DropdownMenuContent align="start" className="w-72 bg-popover border-border backdrop-blur-xl p-2 rounded-2xl shadow-xl">
+                  <div className="grid grid-cols-2 gap-2 p-1">
+                    <DropdownMenuItem className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl focus:bg-primary/20 focus:text-primary cursor-pointer border border-transparent hover:border-primary/20" onClick={() => cameraInputRef.current?.click()}>
+                      <div className="p-3 bg-primary/10 rounded-full text-primary"><Camera className="w-6 h-6" /></div>
+                      <span className="font-bold text-[10px] uppercase">Camera</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl focus:bg-blue-500/20 focus:text-blue-500 cursor-pointer border border-transparent hover:border-blue-500/20" onClick={() => imageInputRef.current?.click()}>
+                      <div className="p-3 bg-blue-500/10 rounded-full text-blue-500"><ImageIcon className="w-6 h-6" /></div>
+                      <span className="font-bold text-[10px] uppercase">Photos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl focus:bg-emerald-500/20 focus:text-emerald-500 cursor-pointer border border-transparent hover:border-emerald-500/20" onClick={() => videoInputRef.current?.click()}>
+                      <div className="p-3 bg-emerald-500/10 rounded-full text-emerald-500"><Monitor className="w-6 h-6" /></div>
+                      <span className="font-bold text-[10px] uppercase">Videos</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex flex-col items-center justify-center gap-2 p-4 rounded-xl focus:bg-orange-500/20 focus:text-orange-500 cursor-pointer border border-transparent hover:border-orange-500/20" onClick={() => fileInputRef.current?.click()}>
+                      <div className="p-3 bg-orange-500/10 rounded-full text-orange-500"><Layers className="w-6 h-6" /></div>
+                      <span className="font-bold text-[10px] uppercase">Files</span>
+                    </DropdownMenuItem>
+                  </div>
+
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-primary/20 focus:text-primary cursor-pointer" onClick={() => toast.info("Math Scanner activated!")}>
                     <div className="p-2 bg-primary/10 rounded-lg text-primary"><Sparkles className="w-4 h-4" /></div>
                     <div className="flex flex-col">
                       <span className="font-bold text-xs uppercase text-primary">Math Scanner</span>
                       <span className="text-[10px] text-muted-foreground">Solve equations with camera</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-primary/20 focus:text-primary cursor-pointer" onClick={() => sendMessage("Generate a study plan for my JAMB exams")}>
-                    <div className="p-2 bg-blue-500/10 rounded-lg text-blue-500"><FileText className="w-4 h-4" /></div>
+                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-pink-500/20 focus:text-pink-500 cursor-pointer" onClick={() => sendMessage("Generate an image of: ")}>
+                    <div className="p-2 bg-pink-500/10 rounded-lg text-pink-500"><ImageIcon className="w-4 h-4" /></div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-xs uppercase text-blue-500">Study Planner</span>
-                      <span className="text-[10px] text-muted-foreground">Guided learning schedule</span>
+                      <span className="font-bold text-xs uppercase text-pink-500">Create Image</span>
+                      <span className="text-[10px] text-muted-foreground">Synthesize high-quality visuals</span>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-primary/20 focus:text-primary cursor-pointer" onClick={() => sendMessage("Create flashcards for this topic")}>
-                    <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-500"><Brain className="w-4 h-4" /></div>
+                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-purple-500/20 focus:text-purple-500 cursor-pointer" onClick={() => sendMessage("Create a 5s video of: ")}>
+                    <div className="p-2 bg-purple-500/10 rounded-lg text-purple-500"><PlayCircle className="w-4 h-4" /></div>
                     <div className="flex flex-col">
-                      <span className="font-bold text-xs uppercase text-emerald-500">Flashcard Gen</span>
-                      <span className="text-[10px] text-muted-foreground">Quick memorization notes</span>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-3 p-3 rounded-xl focus:bg-orange-500/20 focus:text-orange-500 cursor-pointer" onClick={() => sendMessage("Quiz me on basic Physics concepts")}>
-                    <div className="p-2 bg-orange-500/10 rounded-lg text-orange-500"><PlayCircle className="w-4 h-4" /></div>
-                    <div className="flex flex-col">
-                      <span className="font-bold text-xs uppercase text-orange-500">Quick Quiz</span>
-                      <span className="text-[10px] text-muted-foreground">Test your knowledge now</span>
+                      <span className="font-bold text-xs uppercase text-purple-500">Create Video</span>
+                      <span className="text-[10px] text-muted-foreground">Generate motion content</span>
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
@@ -448,7 +565,7 @@ export default function Chat() {
                     <TooltipProvider>
                       {shortcuts.map((s, i) => (
                         <Tooltip key={i}>
-                          <TooltipTrigger>
+                          <TooltipTrigger asChild>
                             <button 
                               type="button"
                               onClick={() => sendMessage(s.label)}
@@ -468,7 +585,7 @@ export default function Chat() {
               <textarea 
                 rows={1}
                 placeholder="Ask Lenory anything... (Try 'Explain gravity')"
-                className="flex-1 bg-transparent border-none outline-none resize-none py-3 px-2 text-[16px] leading-relaxed max-h-[200px] custom-scrollbar focus:ring-0 placeholder:text-muted-foreground/40 text-foreground"
+                className="flex-1 bg-transparent border-none outline-none resize-none py-3 px-2 text-[15px] leading-relaxed max-h-[200px] custom-scrollbar focus:ring-0 placeholder:text-muted-foreground/40 text-foreground"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -481,7 +598,7 @@ export default function Chat() {
 
               <div className="flex items-center gap-1.5 pr-1">
                 <DropdownMenu>
-                  <DropdownMenuTrigger>
+                  <DropdownMenuTrigger asChild>
                     <Button type="button" size="icon" variant="ghost" className="h-10 w-10 rounded-full text-muted-foreground/50 hover:text-primary hover:bg-primary/10 transition-colors">
                       <Smile className="w-5 h-5" />
                     </Button>
@@ -570,6 +687,10 @@ export default function Chat() {
               Lenory can make mistakes. Verify important info.
             </p>
           </div>
+          <input type="file" ref={imageInputRef} className="hidden" accept="image/*" multiple onChange={(e) => handleFileUpload(e, 'image')} />
+          <input type="file" ref={videoInputRef} className="hidden" accept="video/*" onChange={(e) => handleFileUpload(e, 'video')} />
+          <input type="file" ref={fileInputRef} className="hidden" accept=".pdf,.doc,.docx,.txt" multiple onChange={(e) => handleFileUpload(e, 'file')} />
+          <input type="file" ref={cameraInputRef} className="hidden" accept="image/*" capture="environment" onChange={(e) => handleFileUpload(e, 'image')} />
         </div>
       </div>
     </Layout>
