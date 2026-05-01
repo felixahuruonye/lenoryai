@@ -40,9 +40,9 @@ import { GeneratedWebsite } from "@/types";
 import { motion, AnimatePresence } from "motion/react";
 
 const MODELS = [
-  { id: "gemini-2.0-flash", name: "Lenory Flash (Fast)", cost: 2, description: "Synthesizes code at lightspeed. Best for prototypes." },
-  { id: "gemini-2.0-pro-exp-02-05", name: "Lenory Pro (Complex)", cost: 5, description: "Deep architectural reasoning. Best for full-stack apps." },
-  { id: "claude-3-5-sonnet", name: "Lenory Elite (Ultra)", cost: 10, description: "Maximum creativity and visual perfection." }
+  { id: "gemini-3.1-flash-lite-preview", name: "Lenory Lite (Fast)", cost: 1, description: "Ultra-low latency synthesis. Best for small tasks." },
+  { id: "gemini-3-flash-preview", name: "Lenory Flash (Default)", cost: 2, description: "Balanced speed and intelligence for most apps." },
+  { id: "gemini-3.1-pro-preview", name: "Lenory Pro (Complex)", cost: 5, description: "Deep reasoning and coding expertise." }
 ];
 
 export default function WebsiteGen() {
@@ -596,14 +596,14 @@ export default function WebsiteGen() {
 
                 <div className="space-y-3 max-h-[500px] overflow-auto pr-1 custom-scrollbar">
                    {filteredHistory.map(site => (
-                     <button 
+                     <div 
                        key={site.id} 
                        onClick={() => {
                          setGenerated(site);
                          setLocalCode(site.code);
                        }}
                        className={cn(
-                        "w-full text-left p-4 rounded-2xl transition-all border group relative overflow-hidden",
+                        "w-full text-left p-4 rounded-2xl transition-all border group relative overflow-hidden cursor-pointer",
                         generated?.id === site.id 
                           ? "bg-cyan-500/10 border-cyan-500/30" 
                           : "bg-black/40 border-white/5 hover:border-white/20 hover:bg-white/5"
@@ -635,7 +635,7 @@ export default function WebsiteGen() {
                             <span className="text-[9px] text-cyan-400/50 font-bold uppercase">{site.model.includes('pro') ? 'Pro' : 'Fast'}</span>
                           </div>
                        </div>
-                     </button>
+                     </div>
                    ))}
                    {history.length === 0 && (
                      <div className="py-12 text-center space-y-2 opacity-20">

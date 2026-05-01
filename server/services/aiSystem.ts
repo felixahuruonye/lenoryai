@@ -8,37 +8,50 @@ const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY });
 
 export class LearnorySystem {
-  static async generateResponse(userId: string, message: string, history: any[]) {
+  static async generateResponse(userId: string, message: string, history: any[] = []) {
     // 1. Get User Profile & Preferences
-    const { data: user } = await supabaseAdmin
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .single();
+    let userProfile = null;
+    try {
+      if (userId && userId !== 'anonymous') {
+        const { data } = await supabaseAdmin
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        userProfile = data;
+      }
+    } catch (e) {
+      console.warn("User profile fetch failed:", e);
+    }
 
     let responseText = "";
     let usedModel = "gpt-4o-mini";
 
     try {
-      console.log(`Attempting response with ${usedModel}...`);
+      const messages = [
+        { role: 'system' as const, content: this.getSystemPrompt(userProfile) },
+        ...(history || []).slice(-10).map(m => ({
+          role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
+          content: m.content || m.text || ""
+        })),
+        { role: 'user' as const, content: message }
+      ];
+
       const completion = await openai.chat.completions.create({
         model: usedModel,
-        messages: [
-          { role: 'system', content: this.getSystemPrompt(user) },
-          ...history.slice(-10).map(m => ({
-            role: m.role || 'user',
-            content: m.content
-          })),
-          { role: 'user', content: message }
-        ]
+        messages
       });
       responseText = completion.choices[0].message.content || "";
-    } catch (error) {
+    } catch (error: any) {
       console.error(`OpenAI failed:`, error);
-      responseText = "I'm currently experiencing high traffic. Please try again or use the main chat interface.";
+      if (error.status === 429) {
+        responseText = "I'm currently at my capacity limit for the backend chat. Please use the main interactive tutors which use my secondary processor (Gemini) for a faster experience!";
+      } else {
+        responseText = "I encountered an error processing your request. Please try again or switch to another tutor mode.";
+      }
     }
 
-    return { text: responseText, model: usedModel };
+    return { content: responseText, model: usedModel };
   }
 
   static async generateExamQuestions(userId: string, type: string, subjects: string[], duration: number) {
@@ -81,14 +94,15 @@ export class LearnorySystem {
   }
 
   private static getSystemPrompt(user: any) {
-    return `You are LENORY, an advanced AI-powered EdTech assistant for the Nigerian educational sector. 
+    return `You are Lenory, an advanced AI-powered EdTech assistant for the Nigerian educational sector. 
     User Info: ${JSON.stringify(user?.preferences || {})}
     Rules:
     - Use simple, everyday language as preferred.
     - Focus on Nigerian curriculum (JAMB, WAEC, NECO).
     - Provide structured, markdown responses.
     - You can draw ASCII graphs for math help.
-    - If user asks for video, you will trigger Replicate system.`;
+    - If user asks for video, you will trigger Replicate system.
+    - Always refer to yourself as Lenory (never ALL CAPS).`;
   }
 }
 

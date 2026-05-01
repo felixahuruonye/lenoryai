@@ -29,7 +29,7 @@ export class AIService {
         model: "gemini-3-flash-preview",
         contents: prompt,
         config: {
-          systemInstruction: customInstructions || undefined,
+          systemInstruction: customInstructions || "You are Lenory, a helpful companion.",
           ...(isJson ? { responseMimeType: "application/json" } : {})
         }
       });
@@ -41,7 +41,7 @@ export class AIService {
         user_id: userId,
         model: "gemini-3-flash-preview",
         endpoint: "generateContent",
-        tokens_estimate: text.length / 4 // Rough estimate
+        tokens_estimate: text.length / 4 
       });
 
       if (isJson) {

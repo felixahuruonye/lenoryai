@@ -202,7 +202,7 @@ export default function Memory() {
               <span className="text-xs font-black uppercase tracking-[0.2em]">Cognitive Core</span>
             </div>
             <h2 className="text-4xl font-bold tracking-tight">Learning Memory</h2>
-            <p className="text-white/40">Everything LENORY has learned about your learning journey.</p>
+            <p className="text-white/40">Everything Lenory has learned about your learning journey.</p>
           </div>
 
           <div className="flex items-center gap-2">
@@ -277,7 +277,7 @@ export default function Memory() {
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-xl font-bold">AI Learned Intelligence</h3>
-                    <p className="text-white/50 text-sm">LENORY is currently adapting to your <strong>{user?.preferences?.communication_style || 'simple'} communication style</strong> and focusing on <strong>{user?.onboarding_data?.subject || 'general'}</strong>.</p>
+                    <p className="text-white/50 text-sm">Lenory is currently adapting to your <strong>{user?.preferences?.communication_style || 'simple'} communication style</strong> and focusing on <strong>{user?.onboarding_data?.subject || 'general'}</strong>.</p>
                   </div>
                   <Button 
                     onClick={() => setShowResetModal(true)}
@@ -428,7 +428,7 @@ export default function Memory() {
                         <h4 className="text-cyan-400 font-bold mb-2 uppercase text-[10px] tracking-widest">Model Analysis</h4>
                         <p className="text-white/70 leading-relaxed">
                           Based on your session history, you show <strong>High Retention</strong> in theoretical subjects but struggle with <strong>Computational Speed</strong>. 
-                          Your activity peaks between <strong>8 PM - 11 PM</strong>. LENORY suggests focusing on Physics calculations during your next study block.
+                          Your activity peaks between <strong>8 PM - 11 PM</strong>. Lenory suggests focusing on Physics calculations during your next study block.
                         </p>
                      </div>
                    </div>
@@ -475,7 +475,7 @@ export default function Memory() {
               </div>
               <div className="space-y-1">
                 <p className="font-bold text-white/40 group-hover:text-cyan-400 transition-colors">Add Custom Instruction</p>
-                <p className="text-[10px] text-white/20 uppercase tracking-widest font-black">Manually teach LENORY</p>
+                <p className="text-[10px] text-white/20 uppercase tracking-widest font-black">Manually teach Lenory</p>
               </div>
             </button>
           </div>

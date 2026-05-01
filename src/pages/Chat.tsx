@@ -216,7 +216,7 @@ export default function Chat() {
               <Sparkles className="w-4 h-4 md:w-6 md:h-6 text-primary" />
             </div>
             <div>
-              <h2 className="font-bold text-sm md:text-base">Ask LENORY</h2>
+              <h2 className="font-bold text-sm md:text-base">Ask Lenory</h2>
               <div className="flex items-center gap-1.5">
                 <div className="w-1 h-1 md:w-1.5 md:h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-[9px] md:text-[10px] text-muted-foreground uppercase tracking-widest font-black">AI Tutor Online</span>
@@ -290,7 +290,7 @@ export default function Chat() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground/50 uppercase font-black px-2 tracking-widest">
-                       <span>{m.role === 'user' ? 'You' : 'LENORY AI'}</span>
+                       <span>{m.role === 'user' ? 'You' : 'Lenory AI'}</span>
                        <span>•</span>
                        <span>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </div>
@@ -387,7 +387,7 @@ export default function Chat() {
 
               <textarea 
                 rows={1}
-                placeholder="Ask LENORY anything... (Try 'Explain gravity')"
+                placeholder="Ask Lenory anything... (Try 'Explain gravity')"
                 className="flex-1 bg-transparent border-none outline-none resize-none py-3 px-2 text-[16px] leading-relaxed max-h-[200px] custom-scrollbar focus:ring-0 placeholder:text-muted-foreground/40 text-foreground"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -487,7 +487,7 @@ export default function Chat() {
           <div className="mt-3 flex justify-center">
             <p className="text-[10px] text-muted-foreground opacity-50 uppercase tracking-[0.2em] font-black flex items-center gap-2">
               <Sparkles className="w-3 h-3 text-primary" />
-              LENORY can make mistakes. Verify important info.
+              Lenory can make mistakes. Verify important info.
             </p>
           </div>
         </div>

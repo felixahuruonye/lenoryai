@@ -23,31 +23,54 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/voice/transcript", async (req, res) => {
     try {
-      const { audio } = req.body; // Base64 audio
+      const { audio } = req.body; 
       if (!audio) {
         return res.status(400).json({ error: "Missing audio data" });
       }
 
-      if (!process.env.ASSEMBLYAI_API_KEY) {
+      // Check for extremely small buffers to prevent language_detection error
+      const base64Data = audio.includes('base64,') 
+        ? audio.split('base64,')[1] 
+        : audio;
+        
+      const buffer = Buffer.from(base64Data, 'base64');
+      
+      // Increased buffer size check for better reliability (approx 1 sec of audio)
+      if (buffer.length < 8000) { 
+        console.log("Audio buffer too small, skipping transcription");
+        return res.json({ text: "" });
+      }
+
+      const apiKey = process.env.ASSEMBLYAI_API_KEY;
+      if (!apiKey) {
         console.warn("AssemblyAI key missing - using fallback logic");
-        return res.json({ text: "I want to build a modern aesthetic website for a tech startup." });
+        return res.json({ text: "Hello, I am testing the AI system transcription." });
       }
       
-      const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY });
-      const base64Data = audio.replace(/^data:audio\/\w+;base64,/, "");
-      const buffer = Buffer.from(base64Data, 'base64');
+      const aai = new AssemblyAI({ apiKey });
+      
+      console.log(`Transcribing audio buffer of size: ${buffer.length} bytes`);
       
       const transcript = await aai.transcripts.transcribe({
         audio: buffer,
-        language_code: "en",
-        speech_model: "universal-2" as any
+        speech_models: ["universal-3-pro", "universal-2"] as any,
+        punctuate: true,
+        format_text: true,
+        language_code: "en"
       });
 
-      res.json({ text: transcript.text || "I want to build a modern landing page." });
+      if (transcript.status === 'error') {
+        if (transcript.error?.includes("language_detection")) {
+           return res.json({ text: "" });
+        }
+        throw new Error(transcript.error);
+      }
+
+      console.log("AssemblyAI Transcript Result:", transcript.text);
+      res.json({ text: transcript.text || "" });
     } catch (error: any) {
-      console.error("Transcription Error Context:", error.message);
-      // Fallback for user experience continuity
-      res.json({ text: "Transcribed: I need a professional portfolio for a designer." });
+      console.error("Transcription Error:", error.message);
+      res.status(500).json({ error: error.message, text: "" });
     }
   });
 
@@ -85,19 +108,21 @@ export function registerRoutes(app: Express): Server {
     try {
       const { userId, message, history } = req.body;
       
-      // 1. Check & deduct credits (Soft check: don't fail hard if it's the admin)
+      // 1. Check & deduct credits (Soft check: don't fail hard if it's the admin or if user not in DB)
       try {
-        if (userId) {
+        if (userId && userId !== 'anonymous') {
           await CreditSystem.checkCredits(userId, 1);
         }
       } catch (e: any) {
-        console.warn("Credit check failed (skipping for session):", e.message);
+        console.warn("Credit check skipped:", e.message);
       }
       
       const response = await LearnorySystem.generateResponse(userId, message, history);
       
       // Attempt deduction but don't block response
-      CreditSystem.deductCredits(userId, 1).catch(e => console.error("Deduction failed:", e));
+      if (userId && userId !== 'anonymous') {
+        CreditSystem.deductCredits(userId, 1).catch(e => console.error("Deduction failed:", e));
+      }
       
       res.json(response);
     } catch (error: any) {
@@ -130,23 +155,73 @@ export function registerRoutes(app: Express): Server {
       const { text, voiceId } = req.body;
       const apiKey = process.env.ELEVENLABS_API_KEY;
       
-      const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
-        method: 'POST',
-        headers: {
-          'xi-api-key': apiKey || '',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          text,
-          model_id: "eleven_monolingual_v1",
-          voice_settings: { stability: 0.5, similarity_boost: 0.5 }
-        })
-      });
+      if (!apiKey) {
+        throw new Error("ElevenLabs API Key not found");
+      }
+
+      const callElevenLabs = async (vid: string) => {
+        return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${vid}`, {
+          method: 'POST',
+          headers: {
+            'xi-api-key': apiKey,
+            'Content-Type': 'application/json',
+            'Accept': 'audio/mpeg'
+          },
+          body: JSON.stringify({
+            text,
+            model_id: "eleven_multilingual_v2", // Better compatibility
+            voice_settings: { 
+              stability: 0.5, 
+              similarity_boost: 0.8,
+              style: 0.0,
+              use_speaker_boost: true
+            }
+          })
+        });
+      };
+
+      let response = await callElevenLabs(voiceId);
+
+      if (!response.ok) {
+        console.warn(`ElevenLabs voice ${voiceId} failed, fetching available voices...`);
+        try {
+          const voicesRes = await fetch("https://api.elevenlabs.io/v1/voices", {
+            headers: { 'xi-api-key': apiKey }
+          });
+          if (voicesRes.ok) {
+            const { voices } = await voicesRes.json();
+            if (voices && voices.length > 0) {
+              const fallbackVoice = voices[0].voice_id;
+              console.log(`Using fallback voice: ${fallbackVoice}`);
+              response = await callElevenLabs(fallbackVoice);
+            }
+          }
+        } catch (e) {
+          console.error("Voice fallback failed:", e);
+        }
+      }
+
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error(`ElevenLabs API Error: ${errText}`);
+        
+        // Specific check for the common "Unusual activity" block
+        if (errText.includes("Unusual activity")) {
+          return res.status(403).json({ 
+            error: "ElevenLabs blocked this request due to their anti-abuse policy (Free Tier limitations).",
+            details: "Consider using a Paid Plan or the Gemini TTS fallback.",
+            code: "VOICE_BLOCKED"
+          });
+        }
+        
+        throw new Error(errText || "ElevenLabs API Error");
+      }
 
       const buffer = await response.arrayBuffer();
       res.set('Content-Type', 'audio/mpeg');
       res.send(Buffer.from(buffer));
     } catch (error: any) {
+      console.error("TTS Route Error:", error.message);
       res.status(500).json({ error: error.message });
     }
   });

@@ -26,13 +26,13 @@ const STEPS = [
   {
     id: 'intro',
     title: 'Initialize System',
-    description: 'Welcome to LENORY. Let\'s light up your potential.',
+    description: "Welcome to Lenory. Let's light up your potential.",
     icon: Brain
   },
   {
     id: 'identity',
     title: 'Core Identity',
-    description: 'How will you be using LENORY\'s intelligence?',
+    description: "How will you be using Lenory's intelligence?",
     icon: UserIcon
   },
   {
@@ -236,7 +236,7 @@ export default function Onboarding() {
                            <div className="relative inline-block">
                               <div className="absolute inset-0 bg-cyan-500 blur-2xl opacity-20 animate-pulse" />
                               <p className="relative text-xl text-white/80 font-medium leading-relaxed">
-                                 "Greetings, <span className="text-cyan-400 font-black tracking-tight">{user?.name}</span>. I have successfully initialized your neural bridge. I am <span className="text-white font-black italic">LENORY</span> — your hyper-adaptive intelligence partner."
+                                 "Greetings, <span className="text-cyan-400 font-black tracking-tight">{user?.name}</span>. I have successfully initialized your neural bridge. I am <span className="text-white font-black italic">Lenory</span> — your hyper-adaptive intelligence partner."
                               </p>
                            </div>
                            <p className="text-sm text-white/40 max-w-sm mx-auto">

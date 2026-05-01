@@ -106,7 +106,7 @@ export default function Settings() {
                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                     <div className="space-y-1">
                        <h3 className="text-xl font-bold">Authentication Details</h3>
-                       <p className="text-white/40 text-sm">Your unique identifiers within the LENORY network.</p>
+                       <p className="text-white/40 text-sm">Your unique identifiers within the Lenory network.</p>
                     </div>
                     <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl flex items-center gap-3">
                        <Fingerprint className="w-5 h-5 text-cyan-400" />
@@ -157,7 +157,7 @@ export default function Settings() {
                <Card className="p-8 bg-white/5 border-white/10 rounded-[2rem] space-y-8">
                   <div className="space-y-1 text-center md:text-left">
                      <h3 className="text-xl font-bold">Appearance Customization</h3>
-                     <p className="text-white/40 text-sm">Choose how LENORY looks on your device.</p>
+                     <p className="text-white/40 text-sm">Choose how Lenory looks on your device.</p>
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-6">
@@ -213,13 +213,13 @@ export default function Settings() {
                                <div className="w-12 h-12 rounded-full bg-cyan-500 text-black flex items-center justify-center shadow-[0_0_20px_rgba(34,211,238,0.4)]">
                                   <User className="w-6 h-6" />
                                </div>
-                               Male (Adam)
+                               ljX1ZrXu (Male)
                             </button>
                             <button className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-white/5 bg-white/5 text-white/40 hover:border-white/10 hover:text-white transition-all font-bold group">
                                <div className="w-12 h-12 rounded-full bg-white/10 text-white/50 flex items-center justify-center">
                                   <User className="w-6 h-6" />
                                </div>
-                               Female (Bella)
+                               EST9Ui69 (Female)
                             </button>
                          </div>
                       </div>

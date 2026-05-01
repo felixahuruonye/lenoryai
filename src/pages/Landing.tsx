@@ -28,7 +28,7 @@ export default function Landing() {
                 <Brain className="w-6 h-6 text-cyan-400" />
               </div>
             </div>
-            <span className="text-2xl font-black tracking-tighter italic -skew-x-6">LENORY</span>
+            <span className="text-2xl font-black tracking-tighter italic -skew-x-6">Lenory</span>
           </div>
           
           <div className="hidden md:flex items-center gap-8 text-sm font-medium text-white/60">
@@ -170,7 +170,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-2">
             <Brain className="w-5 h-5 text-cyan-400" />
-            <span className="font-black italic -skew-x-6 tracking-tighter">LENORY</span>
+            <span className="font-black italic -skew-x-6 tracking-tighter">Lenory</span>
           </div>
           <div className="flex gap-8 text-xs font-bold uppercase tracking-widest text-white/30">
             <a href="#" className="hover:text-white transition-colors">Privacy</a>
@@ -182,7 +182,7 @@ export default function Landing() {
           </div>
         </div>
         <p className="text-center text-[10px] text-white/10 font-bold uppercase tracking-[0.4em] mt-8">
-          &copy; 2026 LENORY AI Systems. All rights reserved.
+          &copy; 2026 Lenory AI Systems. All rights reserved.
         </p>
       </footer>
     </div>

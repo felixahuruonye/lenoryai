@@ -38,7 +38,7 @@ export default function Auth() {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) toast.error(error.message);
     else {
-      toast.success("Welcome back to LENORY!");
+      toast.success("Welcome back to Lenory!");
       setLocation("/");
     }
     setLoading(false);
@@ -122,7 +122,7 @@ export default function Auth() {
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-12 rounded-xl group transition-all"
             onClick={() => setLocation("/")}
           >
-            Continue to LENORY
+            Continue to Lenory
             <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
           </Button>
           <button 
@@ -145,7 +145,7 @@ export default function Auth() {
       <div className="max-w-md w-full space-y-8 relative z-10">
         <div className="text-center space-y-2">
           <h1 className="text-6xl font-black tracking-tighter bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent italic transform -skew-x-6">
-            LENORY
+            Lenory
           </h1>
           <p className="text-muted-foreground font-medium tracking-wide">The Future of Education is Voice-First.</p>
         </div>
@@ -322,7 +322,7 @@ export default function Auth() {
                   </div>
 
                   <p className="text-center text-sm text-muted-foreground font-medium pt-4">
-                    New to LENORY?{" "}
+                    New to Lenory?{" "}
                     <button 
                       onClick={() => setView('signup')}
                       className="text-primary hover:underline font-bold decoration-2 underline-offset-4"

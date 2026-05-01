@@ -82,7 +82,7 @@ export default function Admin() {
                 <span className="text-xs font-black uppercase tracking-[0.2em]">Restricted Access</span>
               </div>
               <h2 className="text-4xl font-bold tracking-tight">System Control Panel</h2>
-              <p className="text-white/40 font-medium">Enterprise-level management for LENORY infrastructure.</p>
+              <p className="text-white/40 font-medium">Enterprise-level management for Lenory infrastructure.</p>
            </div>
 
            <div className="flex items-center gap-2">

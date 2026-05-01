@@ -76,10 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data) {
         setUser(data);
       } else {
-        // Fallback for new users
+        // Fallback for new users - Create profile in DB
         const sUser = sessionUserOverride || (await supabase.auth.getUser()).data.user;
         if (sUser) {
-          setUser({
+          const newProfile: User = {
             id: sUser.id,
             email: sUser.email || '',
             name: sUser.user_metadata?.full_name || sUser.user_metadata?.name || 'User',
@@ -99,7 +99,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               voice_assistant: { enabled: false, gender: 'female', voice_id: '' }
             },
             created_at: new Date().toISOString()
-          });
+          };
+
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .upsert(newProfile);
+
+          if (insertError) {
+            console.error("Profile creation error:", insertError);
+          }
+          
+          setUser(newProfile);
         }
       }
     } catch (err) {

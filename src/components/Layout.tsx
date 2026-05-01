@@ -32,7 +32,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navItems = [
     { href: "/", icon: LayoutDashboard, label: "Dashboard" },
-    { href: "/chat", icon: MessageSquareCode, label: "Ask LENORY" },
+    { href: "/chat", icon: MessageSquareCode, label: "Ask Lenory" },
     { href: "/exams", icon: GraduationCap, label: "Exams (CBT)" },
     { href: "/study-plan", icon: CalendarDays, label: "Study Planning" },
     { href: "/memory", icon: BrainCircuit, label: "Memory System" },
@@ -60,7 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="p-6 flex items-center justify-between">
           {!collapsed && (
             <h1 className="text-2xl font-bold tracking-tighter bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
-              LENORY
+              Lenory
             </h1>
           )}
           <Button 
@@ -152,7 +152,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Mobile Header */}
         <header className="lg:hidden p-4 border-b border-border bg-card/40 backdrop-blur-xl flex items-center justify-between sticky top-0 z-30">
           <h1 className="text-xl font-bold tracking-tighter bg-gradient-to-r from-cyan-400 to-blue-600 bg-clip-text text-transparent">
-            LENORY
+            Lenory
           </h1>
           <Button variant="ghost" size="icon" onClick={() => setMobileMenuOpen(true)}>
             <Menu className="w-6 h-6" />
