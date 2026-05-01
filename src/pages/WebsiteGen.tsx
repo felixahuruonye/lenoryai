@@ -33,6 +33,7 @@ import {
   Rocket
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AIService } from "@/services/aiService";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
@@ -117,39 +118,27 @@ export default function WebsiteGen() {
   };
 
   const transcribeAudio = async (blob: Blob) => {
+    if (!user) return;
     setLoading(true);
     try {
-      // 1. Convert blob to base64
       const reader = new FileReader();
       reader.readAsDataURL(blob);
       reader.onloadend = async () => {
-        const base64Audio = reader.result as string;
-
-        // 2. Call server-side transcript route
-        const response = await fetch('/api/voice/transcript', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ audio: base64Audio })
+        const base64Data = (reader.result as string).split(',')[1];
+        
+        const text = await AIService.generate(user.id, "Transcribe exactly what is said in this audio. If silent, return empty.", false, {
+          data: base64Data,
+          mimeType: blob.type
         });
 
-        if (response.ok) {
-          const data = await response.json();
-          if (data.text) {
-            setPrompt(prev => prev + " " + data.text);
-            toast.success("Speech transcribed!");
-          } else {
-            throw new Error("Empty transcription");
-          }
-        } else {
-          throw new Error("Transcription server error");
+        if (text && text.trim()) {
+          setPrompt(prev => (prev + " " + text).trim());
+          toast.success("Speech captured!");
         }
       };
     } catch (err) {
-      toast.error("Transcription failed", { description: "Using fallback text simulation." });
-      // Fallback for demo
-      setTimeout(() => {
-        setPrompt(prev => prev + " (Transcription failed but here is a mock request for a landing page)");
-      }, 1000);
+      toast.error("Cloud Transcription failed");
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -209,39 +198,43 @@ export default function WebsiteGen() {
     }
 
     setLoading(true);
+    setStatus("Thinking...");
     try {
+      // Deduct credits locally (Optimistic)
       const { error: creditError } = await supabase
         .from('profiles')
-        .update({ credits: user.credits - selectedModel.cost })
+        .update({ credits: Math.max(0, user.credits - selectedModel.cost) })
         .eq('id', user.id);
 
       if (creditError) throw creditError;
 
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      setStatus("Architecting UI...");
+      const generationPrompt = `Generate a single-file React component using Tailwind CSS for: ${prompt}.
+      
+      Requirements:
+      - Use ONLY Tailwind CSS for styling.
+      - Use lucide-react for icons.
+      - Ensure it's responsive and professional.
+      - Include "Website powered by Lenory AI" in footer.
+      - Use dark/modern theme by default unless specified.
+      - Return ONLY the code, no markdown blocks.`;
 
-      const debugPromptPrefix = debugMode ? "[DEBUG MODE: Focus on fixing issues or refining specific logic] " : "";
-      const finalPrompt = debugPromptPrefix + prompt;
-
+      const code = await AIService.generate(user.id, generationPrompt);
+      
       const newSite: GeneratedWebsite = {
         id: Math.random().toString(36).substr(2, 9),
         user_id: user.id,
         title: prompt.split(' ').slice(0, 3).join(' ') || "Untitled Project",
-        prompt: finalPrompt,
-        code: `// Framework: React + Tailwind\n// Model: ${selectedModel.id}\n// Mode: ${debugMode ? 'Debug' : 'Standard'}\n\nexport default function Site() {\n  return (\n    <div className="bg-zinc-950 text-white min-h-screen pt-20 selection:bg-cyan-500/30">\n      <nav className="fixed top-0 w-full p-4 border-b border-white/5 backdrop-blur-xl z-50 flex justify-between items-center px-10">\n        <div className="flex items-center gap-2">\n           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-blue-600 shadow-lg shadow-cyan-500/20" />\n           <span className="font-black tracking-tighter text-xl">PROTOTYPE.V1</span>\n        </div>\n        <button className="px-5 py-2 bg-white/5 border border-white/10 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-white/10 transition-all">Sign In</button>\n      </nav>\n      <main className="max-w-6xl mx-auto p-12 py-32 space-y-20 animate-in fade-in slide-in-from-bottom-8 duration-1000">\n        <div className="space-y-6 text-center">\n           <h2 className="text-8xl font-black tracking-tighter leading-[0.9]">${prompt.split(' ').slice(0, 5).join(' ')}</h2>\n           <p className="text-white/40 text-2xl font-medium max-w-2xl mx-auto">${prompt.substring(0, 150)}...</p>\n           <div className="flex justify-center gap-4 pt-4">\n              <button className="px-10 py-5 bg-cyan-400 text-black font-black rounded-2xl shadow-xl shadow-cyan-500/20 hover:scale-105 transition-transform">Get Early Access</button>\n              <button className="px-10 py-5 bg-white/5 border border-white/10 text-white font-black rounded-2xl hover:bg-white/10 transition-all">View Demo</button>\n           </div>\n        </div>\n      </main>\n    </div>\n  );\n}`,
+        prompt: prompt,
+        code: code,
         framework: "React + Tailwind",
         model: selectedModel.id,
         is_favorite: false,
-        explanation: debugMode 
-          ? "Stability Protocol Engaged. Applied strict ESLint rules and checked for potential hydration mismatches. Components are now decoupled for maximum debugging efficiency."
-          : `Synthesized using ${selectedModel.name}. Applied glassmorphism on the navigation and ultra-bold typography for a high-impact startup aesthetic. Component density adjusted for optimal readability.`,
+        explanation: `Synthesized using ${selectedModel.name}. Applied modern UI patterns and optimized for responsiveness.`,
         created_at: new Date().toISOString()
       };
 
-      try {
-        await supabase.from('generated_websites').insert([newSite]);
-      } catch (e) {
-        console.warn("Supabase insert failed, using local only");
-      }
+      await supabase.from('generated_websites').insert([newSite]);
 
       const updatedHistory = [newSite, ...history];
       setHistory(updatedHistory);
@@ -250,12 +243,13 @@ export default function WebsiteGen() {
       setGenerated(newSite);
       setLocalCode(newSite.code);
       await refreshProfile();
-      toast.success("Website generated successfully!");
-    } catch (err) {
-      toast.error("Generation failed. Credits preserved.");
+      toast.success("Design completed!");
+    } catch (err: any) {
+      toast.error("Cloud Synthesis failed", { description: err.message });
       console.error(err);
     } finally {
       setLoading(false);
+      setStatus("Ready");
     }
   };
 

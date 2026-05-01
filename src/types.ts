@@ -53,6 +53,9 @@ export interface ChatMessage {
   timestamp: string;
   model?: string;
   type?: 'text' | 'image' | 'video' | 'graph' | 'exam_question';
+  imageUrl?: string;
+  videoUrl?: string;
+  pendingAsset?: boolean;
 }
 
 export interface Exam {

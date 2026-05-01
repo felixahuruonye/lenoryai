@@ -1,15 +1,14 @@
-import { OpenAI } from "openai";
+import { GoogleGenAI } from "@google/genai";
 import { AssemblyAI } from "assemblyai";
 import Replicate from "replicate";
 import { supabaseAdmin } from "../db.ts";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 const replicate = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
 const aai = new AssemblyAI({ apiKey: process.env.ASSEMBLYAI_API_KEY });
 
 export class LearnorySystem {
   static async generateResponse(userId: string, message: string, history: any[] = []) {
-    // 1. Get User Profile & Preferences
     let userProfile = null;
     try {
       if (userId && userId !== 'anonymous') {
@@ -24,69 +23,56 @@ export class LearnorySystem {
       console.warn("User profile fetch failed:", e);
     }
 
-    let responseText = "";
-    let usedModel = "gpt-4o-mini";
-
     try {
-      const messages = [
-        { role: 'system' as const, content: this.getSystemPrompt(userProfile) },
-        ...(history || []).slice(-10).map(m => ({
-          role: (m.role === 'assistant' ? 'assistant' : 'user') as 'assistant' | 'user',
-          content: m.content || m.text || ""
-        })),
-        { role: 'user' as const, content: message }
-      ];
-
-      const completion = await openai.chat.completions.create({
-        model: usedModel,
-        messages
+      const response = await genAI.models.generateContent({ 
+        model: "gemini-3-flash-preview",
+        contents: message,
+        config: {
+          systemInstruction: this.getSystemPrompt(userProfile)
+        }
       });
-      responseText = completion.choices[0].message.content || "";
-    } catch (error: any) {
-      console.error(`OpenAI failed:`, error);
-      if (error.status === 429) {
-        responseText = "I'm currently at my capacity limit for the backend chat. Please use the main interactive tutors which use my secondary processor (Gemini) for a faster experience!";
-      } else {
-        responseText = "I encountered an error processing your request. Please try again or switch to another tutor mode.";
-      }
-    }
 
-    return { content: responseText, model: usedModel };
+      const text = response.text || "";
+      
+      return { content: text, model: "gemini-3-flash-preview" };
+    } catch (error: any) {
+      console.error(`Gemini failed:`, error);
+      return { 
+        content: "I encountered a slight delay. Please refresh or try again in a moment.", 
+        model: "error-fallback" 
+      };
+    }
   }
 
   static async generateExamQuestions(userId: string, type: string, subjects: string[], duration: number) {
-    // Note: Main generation has been moved to the frontend for Gemini API compliance.
-    // This backend route remains as a fallback using OpenAI.
-    const prompt = `You are a Senior Examiner for ${type} in Nigeria. Generate 10 sample exam questions covering: ${subjects.join(', ')}. Return JSON array.`;
+    const prompt = `You are a Senior Nigerian Examiner for ${type}. Generate 10 multiple choice questions with options and correct answers for: ${subjects.join(', ')}. Return ONLY a JSON array of objects with fields: question, options (array of 4), and answer (the string text of the correct option).`;
 
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
+      const result = await genAI.models.generateContent({ 
+        model: "gemini-3-flash-preview", 
+        contents: prompt,
+        config: { responseMimeType: "application/json" } 
       });
-
-      const content = completion.choices[0].message.content || "{}";
+      const content = result.text || "[]";
       const parsed = JSON.parse(content);
       return parsed.questions || parsed;
     } catch (error) {
       console.error("Exam Question Generation Failed:", error);
-      throw error;
+      return [];
     }
   }
 
   static async generateStudyPlan(userId: string, goal: string, subjects: string[], durationDays: number = 30) {
-    // Note: Main generation moved to the frontend for Gemini API compliance.
-    const prompt = `Create a ${durationDays}-day study plan for ${goal} covering ${subjects.join(', ')}. Return JSON object with title, description, and days (array).`;
+    const prompt = `Create a ${durationDays}-day study plan for ${goal} covering ${subjects.join(', ')}. Return ONLY a JSON object with fields: title, description, and days (array of objects with day, focus, tasks).`;
 
     try {
-      const completion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [{ role: "user", content: prompt }],
-        response_format: { type: "json_object" }
+      const result = await genAI.models.generateContent({ 
+        model: "gemini-3-flash-preview", 
+        contents: prompt,
+        config: { responseMimeType: "application/json" } 
       });
-
-      return JSON.parse(completion.choices[0].message.content || "{}");
+      const content = result.text || "{}";
+      return JSON.parse(content);
     } catch (error) {
       console.error("Study Plan Gen Failed:", error);
       throw error;
